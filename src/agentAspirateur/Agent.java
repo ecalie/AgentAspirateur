@@ -3,8 +3,7 @@ package agentAspirateur;
 public class Agent {
 
 	/** position du robot aspirateur. */
-	private int ordonnee;
-	private int abscisse;
+	private Piece position;
 	
 	private Capteur capteur;
 	private Effecteur Effecteur;
