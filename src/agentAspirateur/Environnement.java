@@ -7,8 +7,9 @@ public class Environnement {
 
 	private int longueur;
 	private int largeur;
-	private int mesurePerformance; 
-	private List<List<Piece>> pieces;	
+	private int mesurePerformance;
+
+	private List<List<Piece>> pieces;
 	
 	/**
 	 * Créer l'environnement.
@@ -56,6 +57,13 @@ public class Environnement {
 	 */
 	public int getMesurePerformance() {
 		return this.mesurePerformance;
+	}
+
+	/**
+	 * Renvoie la carte du manoir
+     */
+	public List<List<Piece>> getCarte() {
+		return pieces;
 	}
 	
 	/**

@@ -4,6 +4,7 @@ public class Piece {
 	
 	private boolean poussiere;
 	private boolean bijou;
+
 	private int abscisse;
 	private int ordonnée;
 	
@@ -28,6 +29,14 @@ public class Piece {
 	
 	public boolean getBijou() {
 		return this.bijou;
+	}
+
+	public int getAbscisse() {
+		return abscisse;
+	}
+
+	public int getOrdonnée() {
+		return ordonnée;
 	}
 }
 
