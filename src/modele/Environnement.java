@@ -44,6 +44,7 @@ public class Environnement implements Runnable {
 
 	public int getAbscisse() {
 		return abscisse;
+		
 	}
 
 	public int getOrdonnee() {
@@ -58,20 +59,23 @@ public class Environnement implements Runnable {
 	 * Générer de la pousière dans une pièce aléatoire.
 	 */
 	public void genererPoussiere() {
-		int abscisse = (int) Math.random() * this.largeur;
-		int ordonnee = (int) Math.random() * this.longueur;
+		abscisse = (int) (Math.random() * this.largeur);
+		ordonnee = (int) (Math.random() * this.longueur);
 		
-		this.pieces[ordonnee][abscisse].setPoussiere(true);
+		this.pieces[abscisse][ordonnee].setPoussiere(true);
+		
+		System.out.println(pieces[abscisse][ordonnee].getBijou());
+		System.out.println(pieces[abscisse][ordonnee].getPoussiere());
 	}
 	
 	/**
 	 * Générer un bijou dans une pièce aléatoire. 
 	 */
 	public void genererBijou() {
-		int abscisse = (int) Math.random() * this.largeur;
-		int ordonnee = (int) Math.random() * this.longueur;
+		abscisse = (int) (Math.random() * this.largeur);
+		ordonnee = (int) (Math.random() * this.longueur);
 		
-		this.pieces[ordonnee][abscisse].setBijou(true);		
+		this.pieces[abscisse][ordonnee].setBijou(true);		
 	}
 	
 	/**
@@ -91,7 +95,13 @@ public class Environnement implements Runnable {
 			if (probabilité > 0.66)
 				this.genererBijou();
 			else 
-				genererPoussiere();
+				this.genererPoussiere();
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }

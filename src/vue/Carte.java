@@ -50,8 +50,8 @@ public class Carte extends JFrame implements Runnable {
 		this.pack();
 		this.setVisible(true);
 		while (true) {
-			int i = env.getOrdonnee();
-			int j = env.getAbscisse();
+			int j = env.getOrdonnee();
+			int i = env.getAbscisse();
 
 			Piece p = env.getPieces()[i][j];
 			
