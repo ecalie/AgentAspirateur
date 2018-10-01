@@ -26,12 +26,12 @@ public class Carte extends JFrame implements Runnable {
 		longueur = env.getLongueur();
 		largeur = env.getLargeur();
 
-		this.pieces = new JLabel[longueur][largeur];
+		this.pieces = new JLabel[largeur][longueur];
 
 		this.setLayout(new GridLayout(longueur, largeur));
 
-		for(int i = 0 ; i < longueur ; i++)
-			for (int j = 0 ; j < largeur ; j++) {
+		for(int j = 0 ; j < longueur ; j++)
+			for (int i = 0 ; i < largeur ; i++) {
 				JLabel s = new JLabel();
 				s.setIcon(new ImageIcon("images/rien.png")); 
 				this.add(s);
@@ -50,31 +50,28 @@ public class Carte extends JFrame implements Runnable {
 		this.pack();
 		this.setVisible(true);
 		while (true) {
-			int j = env.getOrdonnee();
-			int i = env.getAbscisse();
+			for (int i = 0 ; i < this.largeur ; i++) {
+				for (int j = 0 ; j < this.longueur ; j++) {
 
-			Piece p = env.getPieces()[i][j];
-			
-			if (p.getBijou() && p.getPoussiere()) {
-				this.pieces[i][j].setIcon(new ImageIcon("images/deux.png"));
-			} else if (p.getBijou()) {
-				this.pieces[i][j].setIcon(new ImageIcon("images/bijou.png"));
-			} else if (p.getPoussiere()) {
-				this.pieces[i][j].setIcon(new ImageIcon("images/poussiere.png"));
+					Piece p = env.getPieces()[i][j];
+
+					if (p.getBijou() && p.getPoussiere()) {
+						this.pieces[i][j].setIcon(new ImageIcon("images/deux.png"));
+					} else if (p.getBijou()) {
+						this.pieces[i][j].setIcon(new ImageIcon("images/bijou.png"));
+					} else if (p.getPoussiere()) {
+						this.pieces[i][j].setIcon(new ImageIcon("images/poussiere.png"));
+					} else {
+						this.pieces[i][j].setIcon(new ImageIcon("images/rien.png"));
+					}
+				}
 			}
-
 			this.repaint();
-			
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
 	public static void main(String[] args) {
-		Carte c = new Carte(new Environnement(10,10));
+		Carte c = new Carte(new Environnement(5,5));
 
 		Thread thread = new Thread(c);
 		thread.start();
@@ -84,6 +81,10 @@ public class Carte extends JFrame implements Runnable {
 	public void run() {
 		Thread thread = new Thread(env);
 		thread.start();
+
+		Thread thread2 = new Thread(new Agent(env));
+		thread2.start();
+
 		this.afficher();
 	}
 }
