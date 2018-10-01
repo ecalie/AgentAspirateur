@@ -1,8 +1,5 @@
 package modele;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Capteur {
 
     public Piece[][] observe(Piece[][] carteAgent,Piece[][] carteEnv) {
