@@ -63,9 +63,6 @@ public class Environnement implements Runnable {
 		ordonnee = (int) (Math.random() * this.longueur);
 		
 		this.pieces[abscisse][ordonnee].setPoussiere(true);
-		
-		System.out.println(pieces[abscisse][ordonnee].getBijou());
-		System.out.println(pieces[abscisse][ordonnee].getPoussiere());
 	}
 	
 	/**
