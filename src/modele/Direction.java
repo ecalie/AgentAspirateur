@@ -1,4 +1,4 @@
-package agentAspirateur;
+package modele;
 
 public enum Direction {
 	haut,

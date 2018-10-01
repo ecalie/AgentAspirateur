@@ -1,15 +1,19 @@
-package agentAspirateur;
+package modele;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Environnement {
+public class Environnement implements Runnable {
 
 	private int longueur;
 	private int largeur;
 	private int mesurePerformance;
 
-	private List<List<Piece>> pieces;
+	private Piece[][] pieces;
+	
+	/** Coordonnées de la dernière pièce modifiée par l'environnement. */
+	private int abscisse;
+	private int ordonnee;
 	
 	/**
 	 * Créer l'environnement.
@@ -20,18 +24,36 @@ public class Environnement {
 		this.longueur = longueur;
 		this.largeur = largeur;
 		
-		this.pieces = new ArrayList<>();
+		this.pieces = new Piece[largeur][longueur];
 		for (int i = 0 ; i < this.largeur ; i++) {
-			List<Piece> lignePieces = new ArrayList<>();
 			for (int j = 0 ; j < this.longueur ; j++) {
-				lignePieces.add(new Piece(i,j));
+				pieces[i][j] = new Piece(i,j);
 			}
-			this.pieces.add(lignePieces);
 		}
 		
 		this.mesurePerformance = 0;
 	}
 	
+	public int getLongueur() {
+		return longueur;
+	}
+
+	public int getLargeur() {
+		return largeur;
+	}
+
+	public int getAbscisse() {
+		return abscisse;
+	}
+
+	public int getOrdonnee() {
+		return ordonnee;
+	}
+
+	public Piece[][] getPieces() {
+		return pieces;
+	}
+
 	/**
 	 * Générer de la pousière dans une pièce aléatoire.
 	 */
@@ -39,7 +61,7 @@ public class Environnement {
 		int abscisse = (int) Math.random() * this.largeur;
 		int ordonnee = (int) Math.random() * this.longueur;
 		
-		this.pieces.get(ordonnee).get(abscisse).setPoussiere(true);
+		this.pieces[ordonnee][abscisse].setPoussiere(true);
 	}
 	
 	/**
@@ -49,7 +71,7 @@ public class Environnement {
 		int abscisse = (int) Math.random() * this.largeur;
 		int ordonnee = (int) Math.random() * this.longueur;
 		
-		this.pieces.get(ordonnee).get(abscisse).setBijou(true);		
+		this.pieces[ordonnee][abscisse].setBijou(true);		
 	}
 	
 	/**
@@ -58,18 +80,12 @@ public class Environnement {
 	public int getMesurePerformance() {
 		return this.mesurePerformance;
 	}
-
-	/**
-	 * Renvoie la carte du manoir
-     */
-	public List<List<Piece>> getCarte() {
-		return pieces;
-	}
 	
 	/**
 	 * 
 	 */
-	public void demarrer() {
+	@Override
+	public void run() {
 		while (true) {
 			double probabilité = Math.random();
 			if (probabilité > 0.66)

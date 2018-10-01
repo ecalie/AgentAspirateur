@@ -1,4 +1,4 @@
-package agentAspirateur;
+package modele;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +26,7 @@ public class Agent {
 
 		// creation des copies de la carte de l'environnement
 		// /!\ faire attention a pas faire de references, il faut faire une copie de la carte
-		Piece[][] carte = env.getCarte();
+		Piece[][] carte = env.getPieces();
 		for (int i = 0 ; i < carte.length ; i++) {
 			for (int j = 0 ; j < carte[i].length ; j++) {
 				croyance[i][j] = new Piece(i,j);
@@ -44,7 +44,7 @@ public class Agent {
 
 	public void majCroyances() {
 		if(destination == null)
-			croyance = capteur.observe(croyance, env.getCarte());
+			croyance = capteur.observe(croyance, env.getPieces());
 		// todo function pour placer l'agent dans la matrice ?
 	}
 
