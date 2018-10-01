@@ -5,31 +5,25 @@ import java.util.List;
 
 public class Capteur {
 
-    public Piece observe(Piece position,Environnement env) {
-        // possible d'opti avec un parcours en spirale
+    public Piece[][] observe(Piece[][] carteAgent,Piece[][] carteEnv) {
 
-        // chercher salle avec poussiere autour de soit
-        ArrayList<Piece> piecesAVisiter = new ArrayList<>();
-        List<List<Piece>> cartePiece = env.getCarte();
+       // test pour verifier que les tableaux ont les memes dimensions
+        if(carteEnv.length == 0 || carteEnv.length != carteAgent.length || carteEnv[1].length != carteAgent[1].length) return null;
 
-        for(List<Piece> ligneP : cartePiece) {
-            for(Piece p : ligneP) {
-                if(p.getPoussiere() || p.getBijou())
-                    piecesAVisiter.add(p);
+        // fait une copie de la carte de l'environnement.
+        boolean aBijoux;
+        boolean aPoussiere;
+        for (int i = 0 ; i < carteEnv.length ; i++) {
+            for (int j = 0 ; j < carteEnv[i].length ; j++) {
+                aBijoux = carteEnv[i][j].getBijou();
+                aPoussiere = carteEnv[i][j].getPoussiere();
+
+                carteAgent[i][j].setBijou(aBijoux);
+                carteAgent[i][j].setPoussiere(aPoussiere);
             }
         }
 
-        // Choix de la pièce la plus proche
-        Piece pieceProche = null;
-        for(Piece p : piecesAVisiter) {
-            if(pieceProche == null || distance(position,p) < distance(position,pieceProche))
-                pieceProche = p;
-        }
-
-        return pieceProche;
+        return carteAgent;
     }
 
-    private int distance(Piece p1, Piece p2) {
-        return (Math.abs(p1.getOrdonnée() - p2.getOrdonnée()) + Math.abs(p1.getAbscisse() - p2.getAbscisse()));
-    }
 }
