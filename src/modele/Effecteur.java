@@ -9,7 +9,7 @@ public class Effecteur {
         this.agent = agent;
     }
 
-    public void executeAction(Desir desir) {
+    public void executeAction(Action[] intentions) {
         // redirige vers une action suivant le désir de l'agent
     }
 
