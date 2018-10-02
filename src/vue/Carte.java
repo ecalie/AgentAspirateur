@@ -18,10 +18,11 @@ public class Carte extends JFrame implements Runnable {
 	private int largeur;
 	private Environnement env;
 
-	public Carte(Environnement env) {
+	public Carte(Environnement env, Agent robot) {
 		super("Plan du manoir");
 		this.setDefaultCloseOperation(this.EXIT_ON_CLOSE);
 		this.env = env;
+		this.robot = robot;
 
 		longueur = env.getLongueur();
 		largeur = env.getLargeur();
@@ -54,16 +55,22 @@ public class Carte extends JFrame implements Runnable {
 				for (int j = 0 ; j < this.longueur ; j++) {
 
 					Piece p = env.getPieces()[i][j];
-
+					String nomImage;
 					if (p.getBijou() && p.getPoussiere()) {
-						this.pieces[i][j].setIcon(new ImageIcon("images/deux.png"));
+						nomImage = "images/deux";
 					} else if (p.getBijou()) {
-						this.pieces[i][j].setIcon(new ImageIcon("images/bijou.png"));
+						nomImage = "images/bijou";
 					} else if (p.getPoussiere()) {
-						this.pieces[i][j].setIcon(new ImageIcon("images/poussiere.png"));
+						nomImage = "images/poussiere";
 					} else {
-						this.pieces[i][j].setIcon(new ImageIcon("images/rien.png"));
+						nomImage = "images/rien";
 					}
+					
+					if (this.robot.getPosition().getAbscisse() == i && this.robot.getPosition().getOrdonnee() == j) 
+						nomImage += "_robot";
+					
+					nomImage += ".png";
+					this.pieces[i][j].setIcon(new ImageIcon(nomImage));
 				}
 			}
 			this.repaint();
@@ -71,7 +78,8 @@ public class Carte extends JFrame implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		Carte c = new Carte(new Environnement(5,5));
+		Environnement env = new Environnement(5,5);
+		Carte c = new Carte(env, new Agent(env));
 
 		Thread thread = new Thread(c);
 		thread.start();
@@ -82,7 +90,7 @@ public class Carte extends JFrame implements Runnable {
 		Thread thread = new Thread(env);
 		thread.start();
 
-		Thread thread2 = new Thread(new Agent(env));
+		Thread thread2 = new Thread(robot);
 		thread2.start();
 
 		this.afficher();
