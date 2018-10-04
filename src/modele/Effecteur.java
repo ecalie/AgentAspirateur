@@ -11,7 +11,7 @@ public class Effecteur {
 
     public void executeAction(ArrayList<Action> intentions) {
         // redirige vers une action suivant le désir de l'agent
-    	
+
     	for (int i = intentions.size()-1 ; i >= 0 ; i--) {
     		Action a = intentions.get(i);
     		switch (a) {
@@ -34,7 +34,7 @@ public class Effecteur {
     			ramasserBijou();
     			break;
     		}
-    		
+
     		try {
     			Thread.sleep(300);
     		} catch (InterruptedException e) {
@@ -47,7 +47,7 @@ public class Effecteur {
     private void seDeplacer(Direction d) {
         // appel de plus court chemin
         // ajouter unité de deplacement au score
-    	
+
     	agent.setPosition(agent.getPosition().voisin(d));
     	agent.setEtatInterne(agent.getEtatInterne() - 1);
     }
@@ -55,7 +55,7 @@ public class Effecteur {
     private void aspirerTout() {
         // modif etat piece
         // modif score
-    	
+
     	agent.setEnv(agent.getEnv().aspirer(agent.getPosition().getAbscisse(), agent.getPosition().getOrdonnee()));
     	agent.setEtatInterne(agent.getEtatInterne() - 1 + agent.getPosition().gainAspirer());
     }
@@ -63,7 +63,7 @@ public class Effecteur {
     private void ramasserBijou() {
         // modif etat piece
         // modif score
-    	
+
     	agent.setEnv(agent.getEnv().ramasser(agent.getPosition().getAbscisse(), agent.getPosition().getOrdonnee()));
     	agent.setEtatInterne(agent.getEtatInterne() - 1 + agent.getPosition().gainRamasser());
     }

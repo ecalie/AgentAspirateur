@@ -1,6 +1,7 @@
 package vue;
 
 import java.awt.GridLayout;
+import java.util.Scanner;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -78,8 +79,29 @@ public class Carte extends JFrame implements Runnable {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("Saisir 0 pour une recherche non informee ou 1 pour une recherche informee : ");
+
+
+		Scanner sc = new Scanner(System.in);
+		boolean OK = false;
+		boolean informe = true;
+		while (!OK) {
+			String s = sc.next();
+			if(s.equals("0")) {
+				OK = true;
+				informe = false;
+			}
+			else if(s.equals("1")) {
+				OK = true;
+				informe = true;
+			}
+
+		}
+
+		System.out.println("Vous avez choisis : " + (informe ? "INFORME" : "NON INFORME"));
+
 		Environnement env = new Environnement(5,5);
-		Carte c = new Carte(env, new Agent(env));
+		Carte c = new Carte(env, new Agent(env,informe));
 
 		Thread thread = new Thread(c);
 		thread.start();
