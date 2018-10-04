@@ -11,11 +11,10 @@ public abstract class Noeud {
 	protected int cout;
 	protected int profondeur;
 
-	public Noeud(Manoir carte, Piece position, Action action, int cout) {
+	public Noeud(Manoir carte, Piece position, Action action) {
 		this.carte = carte;
 		this.positionRobot = position;
 		this.action = action;
-		this.cout = cout;
 	}
 
 	public Piece getPositionRobot() {
@@ -40,6 +39,8 @@ public abstract class Noeud {
 
 	public abstract Noeud getNoeudParent();
 
+	public abstract int evaluation();
+	
 	/**
 	 * Calculer le gain de l'action selon l'environnemenr.
 	 * Seules les actions ramsser et aspirer peuvent faire gagner ou perdre des points.
@@ -68,7 +69,7 @@ public abstract class Noeud {
      * @return Vrai si les deux ont la même carte.
      */
     public boolean estSolution(int desir) {
-        return (this.cout - this.calculerGain() < desir);
+        return (this.cout < desir);
     }
 
 }

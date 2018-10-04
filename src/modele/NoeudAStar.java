@@ -5,38 +5,26 @@ import java.util.Collection;
 
 public class NoeudAStar extends Noeud{
 
-	private int coutG;
 	private int coutH;
-	private int coutF;
 	private NoeudAStar noeudAstarParent;
 
-	public NoeudAStar(Manoir carte, Piece position, Action action, NoeudAStar noeudParent, int coutG) {
-		super(carte, position,action,coutG);
-		this.coutG = coutG;
-		this.coutH = heuristique();
-		this.setCoutF(this.coutG + this.coutH);
-		this.noeudAstarParent = noeudParent;
+	public NoeudAStar(Manoir carte, Piece position, Action action, NoeudAStar noeudParent) {
+		super(carte, position,action);
 
-		if (this.noeudAstarParent == null)
+		if (noeudParent == null) {
 			this.profondeur = 0;
-		else
-			this.profondeur = this.noeudAstarParent.profondeur + 1;
-	}
+			this.cout = 0;
+		} else {
+			this.profondeur = noeudParent.profondeur + 1;
+			this.cout = noeudParent.cout + 1;
+			if (this.action == Action.RAMASSER )
+				this.cout -= this.positionRobot.gainRamasser();
+			else if (this.action == Action.ASPIRER)
+				this.cout -= this.positionRobot.gainAspirer();
+		}
 
-	public int getCoutF() {
-		return this.coutF;
-	}
-
-	public void setCoutF(int coutF) {
-		this.coutF = coutF;
-	}
-
-	public int getCoutG() {
-		return coutG;
-	}
-
-	public void setCoutG(int coutG) {
-		this.coutG = coutG;
+		this.coutH = heuristique();
+		this.noeudAstarParent = noeudParent;
 	}
 
 	public int getCoutH() {
@@ -51,7 +39,6 @@ public class NoeudAStar extends Noeud{
 	public NoeudAStar getNoeudParent(){
 		return noeudAstarParent;
 	}
-
 
 	/**
 	 * Calculer une estimation du coût restant jusqu'à un noeud solution.
@@ -97,7 +84,7 @@ public class NoeudAStar extends Noeud{
 			try {
 				pieces.add(map[i][j]);
 			} catch (ArrayIndexOutOfBoundsException ex) {
-				// la pièce n'exs=iste pas, rien à faire
+				// la pièce n'existe pas, rien à faire
 			}
 			j--;
 		}
@@ -107,7 +94,7 @@ public class NoeudAStar extends Noeud{
 			try {
 				pieces.add(map[i][j]);
 			} catch (ArrayIndexOutOfBoundsException ex) {
-				// la pièce n'exs=iste pas, rien à faire
+				// la pièce n'existe pas, rien à faire
 			}
 			i--;
 		}
@@ -117,7 +104,7 @@ public class NoeudAStar extends Noeud{
 			try {
 				pieces.add(map[i][j]);
 			} catch (ArrayIndexOutOfBoundsException ex) {
-				// la pièce n'exs=iste pas, rien à faire
+				// la pièce n'existe pas, rien à faire
 			}
 			j++;
 		}
@@ -127,13 +114,18 @@ public class NoeudAStar extends Noeud{
 			try {
 				pieces.add(map[i][j]);
 			} catch (ArrayIndexOutOfBoundsException ex) {
-				// la pièce n'exs=iste pas, rien à faire
+				// la pièce n'existe pas, rien à faire
 			}
 			i++;
 		}
 
 
 		return pieces;
+	}
+
+	@Override
+	public int evaluation() {
+		return cout + coutH;
 	}
 
 }

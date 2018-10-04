@@ -22,8 +22,8 @@ public class Environnement implements Runnable {
 				pieces[i][j] = new Piece(i,j);
 			}
 		}
-		pieces[5][4].setPoussiere(true);
 		
+		pieces[5][4].setPoussiere(true);
 		this.pieces = new Manoir(pieces);
 	}
 	

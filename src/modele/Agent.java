@@ -130,9 +130,9 @@ public class Agent implements Runnable {
 		else {
 			Noeud n;
 			if(informe) {		// utilise l'exploration informée
-				n = new NoeudAStar(this.croyance, this.position, Action.ATTENDRE, null, 0);
+				n = new NoeudAStar(this.croyance, this.position, Action.ATTENDRE, null);
 			} else {			// utilise l'exploration NON informée
-				n = new NoeudUCF(this.croyance, this.position, Action.ATTENDRE, null, 0);
+				n = new NoeudUCF(this.croyance, this.position, Action.ATTENDRE, null);
 			}
 
 			intentions = exploration(n);
@@ -159,10 +159,10 @@ public class Agent implements Runnable {
 			new Comparator<Noeud>(){
 				@Override
 				public int compare(Noeud i, Noeud j){
-					if(i.getCout() > j.getCout()){
+					if(i.evaluation() > j.evaluation()){
 						return 1;
 					}
-					else if (i.getCout() < j.getCout()){
+					else if (i.evaluation() < j.evaluation()){
 						return -1;
 					}
 					else{
@@ -190,7 +190,6 @@ public class Agent implements Runnable {
 			// S'il est solution on récupère la liste des actions pour arriver à ce noeud
 			if (n.estSolution(this.desir)) {
 				System.out.println(n.getCout());
-				System.out.println(n.calculerGain());
 				ArrayList<Action> actions = new ArrayList<>();
 				Noeud node = n;
 				this.destination = node.getPositionRobot();
@@ -230,38 +229,34 @@ public class Agent implements Runnable {
 		Piece position = noeud.getPositionRobot();
 		// haut
 		if(haut != null) {
-			int cout = noeud.getCout() + 1;
-			voisins.add(new NoeudAStar(noeud.getCarte(),haut,Action.MONTER,noeud,cout));
+			voisins.add(new NoeudAStar(noeud.getCarte(),haut,Action.MONTER,noeud));
 		}
 
 		// bas
 		if(bas != null) {
-			int cout = noeud.getCout() + 1;
-			voisins.add(new NoeudAStar(noeud.getCarte(),bas,Action.DESCENDRE,noeud,cout));
+			voisins.add(new NoeudAStar(noeud.getCarte(),bas,Action.DESCENDRE,noeud));
 		}
 
 		// gauche
 		if(gauche != null) {
-			int cout = noeud.getCout() + 1;
-			voisins.add(new NoeudAStar(noeud.getCarte(),gauche,Action.GAUCHE,noeud,cout));
+			voisins.add(new NoeudAStar(noeud.getCarte(),gauche,Action.GAUCHE,noeud));
 		}
 
 		// droite
 		if(droite != null) {
-			int cout = noeud.getCout() + 1;
-			voisins.add(new NoeudAStar(noeud.getCarte(),droite,Action.DROITE,noeud,cout));
+			voisins.add(new NoeudAStar(noeud.getCarte(),droite,Action.DROITE,noeud));
 		}
 
 		// aspirer
 		if (noeud.getCarte().piece(position).getBijou() || noeud.getCarte().piece(position).getPoussiere()) {
 			voisins.add(new NoeudAStar(this.getCarteApresAspiration(position), noeud.getPositionRobot(),
-					Action.ASPIRER, noeud, noeud.getCout() + 1));
+					Action.ASPIRER, noeud));
 		}
 		
 		// ramasser
 		if (noeud.getCarte().piece(position).getBijou()) {
 			voisins.add(new NoeudAStar(this.getCarteApresRamassage(position), noeud.getPositionRobot(), 
-					Action.RAMASSER, noeud, noeud.getCout() + 1));
+					Action.RAMASSER, noeud));
 		}
 		
 		return voisins;
@@ -281,39 +276,39 @@ public class Agent implements Runnable {
 		// 		- monter
 		Piece p = croyance.voisin(position, Direction.haut);
 		if (p != null) {
-			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.MONTER, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.MONTER, noeud);
 			noeudsVoisins.add(s);
 		}
 
 		//		- descendre
 		p = croyance.voisin(position, Direction.bas);
 		if (p != null) {
-			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DESCENDRE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DESCENDRE, noeud);
 			noeudsVoisins.add(s);
 		}
 
 		//	- droite
 		p = croyance.voisin(position, Direction.droite);
 		if (p != null) {
-			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DROITE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DROITE, noeud);
 			noeudsVoisins.add(s);
 		}
 		//		- gauche
 		p = croyance.voisin(position, Direction.gauche);
 		if (p != null) {
-			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.GAUCHE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.GAUCHE, noeud);
 			noeudsVoisins.add(s);
 		}
 
 		//		- aspirer
 		if (noeud.getCarte().piece(position).getBijou() || noeud.getCarte().piece(position).getPoussiere()) {
-			Noeud s = new NoeudUCF(this.getCarteApresAspiration(position), position, Action.ASPIRER, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(this.getCarteApresAspiration(position), position, Action.ASPIRER, noeud);
 			noeudsVoisins.add(s);
 		}
 
 		//		- ramasser
 		if (noeud.getCarte().piece(position).getBijou()) {
-			Noeud s = new NoeudUCF(this.getCarteApresRamassage(position), position, Action.RAMASSER, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(this.getCarteApresRamassage(position), position, Action.RAMASSER, noeud);
 			noeudsVoisins.add(s);
 		}
 
