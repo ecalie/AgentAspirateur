@@ -12,7 +12,7 @@ public class Agent implements Runnable {
 	private Capteur capteur;
 	private Effecteur effecteur;
 	private Piece[][] croyance; // carte retenue lors de l'observation avec position aspi
-	private Piece[][] desir; // carte des pièces vides : objectif de l'agent
+	private int desir; // points - coût > 0
 	private ArrayList<Action> intentions;
 	private int etatInterne; // score
 	// choix de l'utilisateur, si à VRAI on utilise l'exploration INFORME , si a FAUX alors NON INFORME
@@ -30,12 +30,11 @@ public class Agent implements Runnable {
 		Piece[][] carte = env.getPieces();
 
 		croyance = new Piece[carte.length][carte[0].length];
-		desir = new Piece[carte.length][carte[0].length];
+		desir = 0;
 		synchronized (carte) {
 			for (int i = 0; i < carte.length; i++) {
 				for (int j = 0; j < carte[i].length; j++) {
 					croyance[i][j] = new Piece(i, j, this.croyance);
-					desir[i][j] = new Piece(i, j, this.croyance);
 				}
 			}
 		}
@@ -99,8 +98,7 @@ public class Agent implements Runnable {
 		// verifie les différences entre la carte désirée et la carte observée
 		for(int i = 0 ; i < croyance.length ; i++) {
 			for (int j = 0 ; j < croyance[i].length ; j++) {
-				if(croyance[i][j].getBijou() != desir[i][j].getBijou() ||
-						croyance[i][j].getPoussiere() != desir[i][j].getPoussiere()) {
+				if(croyance[i][j].getBijou() || croyance[i][j].getPoussiere()) {
 					// si une différence est repérée on demande a effectuer une action
 					return true;
 				}
@@ -159,6 +157,7 @@ public class Agent implements Runnable {
 				}
 			}
 		}
+
 		if(but != null) {
 			NoeudAStar noeudArrivee = new NoeudAStar(but,Action.ATTENDRE,null,0,0,0);
 			noeudDepart.setCoutH(heuristique(position,but));
@@ -184,21 +183,21 @@ public class Agent implements Runnable {
 		Set<NoeudAStar> explored = new HashSet<NoeudAStar>();
 
 		PriorityQueue<NoeudAStar> queue = new PriorityQueue<>(100,
-			new Comparator<NoeudAStar>(){
-				@Override
-				public int compare(NoeudAStar i, NoeudAStar j){
-					if(i.getCout() > j.getCout()){
-						return 1;
-					}
-					else if (i.getCout() < j.getCout()){
-						return -1;
-					}
-					else{
-						return 0;
-					}
+				new Comparator<NoeudAStar>(){
+			@Override
+			public int compare(NoeudAStar i, NoeudAStar j){
+				if(i.getCout() > j.getCout()){
+					return 1;
+				}
+				else if (i.getCout() < j.getCout()){
+					return -1;
+				}
+				else{
+					return 0;
 				}
 			}
-		);
+		}
+				);
 
 		//initialisation du coût au départ
 		source.setCoutG(0);
@@ -220,7 +219,7 @@ public class Agent implements Runnable {
 					n = new NoeudAStar(current.getPositionRobot(),Action.RAMASSER,n,0,0,0);
 				}
 				else if(current.getPositionRobot().getBijou())
-					 n = new NoeudAStar(current.getPositionRobot(),Action.RAMASSER,current,0,0,0);
+					n = new NoeudAStar(current.getPositionRobot(),Action.RAMASSER,current,0,0,0);
 				else if(current.getPositionRobot().getPoussiere())
 					n = new NoeudAStar(current.getPositionRobot(),Action.ASPIRER,current,0,0,0);
 				current = n;

@@ -100,7 +100,7 @@ public class Carte extends JFrame implements Runnable {
 
 		System.out.println("Vous avez choisis : " + (informe ? "INFORME" : "NON INFORME"));
 
-		Environnement env = new Environnement(5,5);
+		Environnement env = new Environnement(10,10);
 		Carte c = new Carte(env, new Agent(env,informe));
 
 		Thread thread = new Thread(c);
