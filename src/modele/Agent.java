@@ -46,6 +46,11 @@ public class Agent implements Runnable {
 		intentions = new ArrayList<>();
 
 	}
+
+	public Piece getDestination() {
+		return this.destination;
+	}
+
 	public Piece getPosition() {
 		return this.position;
 	}
@@ -76,6 +81,14 @@ public class Agent implements Runnable {
 
 	public void setCroyance(Piece[][] croyance) {
 		this.croyance = croyance;
+	}
+
+	/**
+	 * Récupérer l'action que le robot est en train de faire.
+	 * @return L'action en cours.
+	 */
+	public Action action() {
+		return this.effecteur.getAction();		
 	}
 
 	/**
@@ -130,6 +143,7 @@ public class Agent implements Runnable {
 	private void executerAction() {
 		effecteur.executeAction(intentions);
 		this.intentions.clear();
+		this.destination = null;
 	}
 
 	/**
@@ -164,6 +178,7 @@ public class Agent implements Runnable {
 			noeudDepart.setCoutF(noeudDepart.getCoutH());
 			List<NoeudAStar> chemin = AstarSearch(noeudDepart,noeudArrivee);
 			ArrayList<Action> listeActions = new ArrayList<>();
+			this.destination = noeudArrivee.getPositionRobot();
 			for(NoeudAStar noeud : chemin) {
 				listeActions.add(noeud.getAction());
 			}
@@ -183,21 +198,21 @@ public class Agent implements Runnable {
 		Set<NoeudAStar> explored = new HashSet<NoeudAStar>();
 
 		PriorityQueue<NoeudAStar> queue = new PriorityQueue<>(100,
-				new Comparator<NoeudAStar>(){
-			@Override
-			public int compare(NoeudAStar i, NoeudAStar j){
-				if(i.getCout() > j.getCout()){
-					return 1;
-				}
-				else if (i.getCout() < j.getCout()){
-					return -1;
-				}
-				else{
-					return 0;
+			new Comparator<NoeudAStar>(){
+				@Override
+				public int compare(NoeudAStar i, NoeudAStar j){
+					if(i.getCout() > j.getCout()){
+						return 1;
+					}
+					else if (i.getCout() < j.getCout()){
+						return -1;
+					}
+					else{
+						return 0;
+					}
 				}
 			}
-		}
-				);
+		);
 
 		//initialisation du coût au départ
 		source.setCoutG(0);
@@ -332,6 +347,7 @@ public class Agent implements Runnable {
 			if (n.estSolution(this.desir)) {
 				ArrayList<Action> actions = new ArrayList<>();
 				NoeudUCF node = n;
+				this.destination = node.getPositionRobot();
 				while (node != null) {
 					actions.add(node.getAction());
 					node = node.getNoeudParent();

@@ -4,17 +4,22 @@ import java.util.ArrayList;
 
 public class Effecteur {
     private Agent agent;
-
+    private Action action;
+    
     public Effecteur(Agent agent) {
         this.agent = agent;
     }
 
+    public Action getAction() {
+    	return this.action;
+    }
+    
     public void executeAction(ArrayList<Action> intentions) {
         // redirige vers une action suivant le désir de l'agent
 
     	for (int i = intentions.size()-1 ; i >= 0 ; i--) {
-    		Action a = intentions.get(i);
-    		switch (a) {
+    		action = intentions.get(i);
+    		switch (action) {
     		case MONTER:
     			seDeplacer(Direction.haut);
     			break;
