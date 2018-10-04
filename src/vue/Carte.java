@@ -50,7 +50,7 @@ public class Carte extends JPanel {
 		for (int i = 0 ; i < this.largeur ; i++) {
 			for (int j = 0 ; j < this.longueur ; j++) {
 
-				Piece p = env.getPieces()[i][j];
+				Piece p = env.getPieces().piece(i,j);
 				String nomImage;
 				if (p.getBijou() && p.getPoussiere()) {
 					nomImage = "images/deux";

@@ -11,40 +11,37 @@ public class Agent implements Runnable {
 	private Environnement env;
 	private Capteur capteur;
 	private Effecteur effecteur;
-	private Piece[][] croyance; // carte retenue lors de l'observation avec position aspi
+	private Manoir croyance; // carte retenue lors de l'observation avec position aspi
 	private int desir; // points - coût > 0
 	private ArrayList<Action> intentions;
 	private int etatInterne; // score
 	// choix de l'utilisateur, si à VRAI on utilise l'exploration INFORME , si a FAUX alors NON INFORME
 	private boolean informe;
 
-	public Agent(Environnement env,boolean informe) {
+	public Agent(Environnement env, boolean informe) {
 		this.env = env;
-		this.informe = informe;
-
 		effecteur = new Effecteur(this);
 		capteur = new Capteur();
-
+		this.informe = informe;
+		
 		// creation des copies de la carte de l'environnement
 		// /!\ faire attention a pas faire de references, il faut faire une copie de la carte
-		Piece[][] carte = env.getPieces();
+		Manoir carte = env.getPieces();
 
-		croyance = new Piece[carte.length][carte[0].length];
+		Piece[][] carteCroyance = new Piece[carte.getLargeur()][carte.getLongueur()];
 		desir = 0;
-		synchronized (carte) {
-			for (int i = 0; i < carte.length; i++) {
-				for (int j = 0; j < carte[i].length; j++) {
-					croyance[i][j] = new Piece(i, j, this.croyance);
-				}
+		for (int i = 0 ; i < carte.getLargeur() ; i++) {
+			for (int j = 0 ; j < carte.getLongueur() ; j++) {
+				carteCroyance[i][j] = new Piece(i,j);
 			}
 		}
+		this.croyance = new Manoir(carteCroyance);
 
 		etatInterne = 0;
-		// todo placer l'agent dans la matrice
-		position = croyance[0][0]; // initialise position à la 1ère pièce du manoir
+		// initialise la position au centre du manoir
+		position = croyance.piece(env.getLargeur() / 2, env.getLongueur()/2); 
 		destination = null;
 		intentions = new ArrayList<>();
-
 	}
 
 	public Piece getDestination() {
@@ -75,11 +72,11 @@ public class Agent implements Runnable {
 		this.env = env;
 	}
 
-	public Piece[][] getCroyance() {
+	public Manoir getCroyance() {
 		return croyance;
 	}
 
-	public void setCroyance(Piece[][] croyance) {
+	public void setCroyance(Manoir croyance) {
 		this.croyance = croyance;
 	}
 
@@ -97,7 +94,7 @@ public class Agent implements Runnable {
 	public void majCroyances() {
 		if(destination == null) {
 			synchronized (env.getPieces()) {
-				croyance = capteur.observe(croyance, env.getPieces());
+				croyance.setLesPieces(capteur.observe(croyance.getLesPieces(), env.getPieces().getLesPieces()));
 			}
 		}
 		// todo function pour placer l'agent dans la matrice ?
@@ -109,16 +106,16 @@ public class Agent implements Runnable {
 	 */
 	private boolean besoinAction() {
 		// verifie les différences entre la carte désirée et la carte observée
-		for(int i = 0 ; i < croyance.length ; i++) {
-			for (int j = 0 ; j < croyance[i].length ; j++) {
-				if(croyance[i][j].getBijou() || croyance[i][j].getPoussiere()) {
+		for(int i = 0 ; i < croyance.getLargeur() ; i++) {
+			for (int j = 0 ; j < croyance.getLongueur() ; j++) {
+				if(croyance.piece(i,j).getBijou() || croyance.piece(i,j).getPoussiere()) {
 					// si une différence est repérée on demande a effectuer une action
 					return true;
 				}
 			}
 		}
 		return false;
-	}
+	}	
 
 	/**
 	 * lance l'agorithme pour effectuer des actions si necessaire
@@ -131,10 +128,14 @@ public class Agent implements Runnable {
 		}
 		// sinon
 		else {
-			if(informe)		// utilise l'exploration informée
-				intentions =explorationInformee();
-			else			// utilise l'exploration NON informée
-				intentions = explorationNonInformee();
+			Noeud n;
+			if(informe) {		// utilise l'exploration informée
+				n = new NoeudAStar(this.croyance, this.position, Action.ATTENDRE, null, 0);
+			} else {			// utilise l'exploration NON informée
+				n = new NoeudUCF(this.croyance, this.position, Action.ATTENDRE, null, 0);
+			}
+
+			intentions = exploration(n);
 		}
 	}
 	/**
@@ -147,60 +148,17 @@ public class Agent implements Runnable {
 	}
 
 	/**
-	 * Récupérer la liste des actions à faire par un algorithme d'exploration informé.
-	 * @return La liste des actions
+	 * Récupérer la liste des actions à faire par un algorithme d'exploration.
+	 * @return La liste des actions.
 	 */
-	public ArrayList<Action> explorationInformee() {
-		NoeudAStar noeudDepart = new NoeudAStar(position,Action.ATTENDRE,null,0,0,0);
-
-
-		Integer dist, mindist;
-		mindist = null;
-		Piece but = null;
-		for (int i = 0; i < croyance.length; i++) {
-			for (int j = 0; j < croyance[i].length; j++) {
-				if (croyance[i][j] != position && (croyance[i][j].getBijou() || croyance[i][j].getPoussiere())) {
-					dist = heuristique(position, croyance[i][j]);
-					if (mindist == null) {
-						mindist = dist;
-						but = croyance[i][j];
-					} else if (dist < mindist) {
-						mindist = dist;
-						but = croyance[i][j];
-					}
-				}
-			}
-		}
-
-		if(but != null) {
-			NoeudAStar noeudArrivee = new NoeudAStar(but,Action.ATTENDRE,null,0,0,0);
-			noeudDepart.setCoutH(heuristique(position,but));
-			noeudDepart.setCoutF(noeudDepart.getCoutH());
-			List<NoeudAStar> chemin = AstarSearch(noeudDepart,noeudArrivee);
-			ArrayList<Action> listeActions = new ArrayList<>();
-			this.destination = noeudArrivee.getPositionRobot();
-			for(NoeudAStar noeud : chemin) {
-				listeActions.add(noeud.getAction());
-			}
-			return listeActions;
-		}
-		return null;
-	}
-
-	/**
-	 * Algorithme d'exploration A* permettant de trouver un chemin vers le but
-	 * @param source noeud de départ, il sera le noeud racine de l'arbre
-	 * @param but    le noeud à atteint
-	 * @return La liste noeuds permettant d'aller du noeud source au but
-	 */
-	public List<NoeudAStar> AstarSearch(NoeudAStar source, NoeudAStar but){
-
-		Set<NoeudAStar> explored = new HashSet<NoeudAStar>();
-
-		PriorityQueue<NoeudAStar> queue = new PriorityQueue<>(100,
-			new Comparator<NoeudAStar>(){
+	private ArrayList<Action> exploration(Noeud noeudDepart) {
+		// initialisation de la liste des noeuds déjà explorés
+		ArrayList<Noeud> explored = new ArrayList<>();
+		// Initialisation de la frontière
+		PriorityQueue<Noeud> frontiere = new PriorityQueue<>(100,
+			new Comparator<Noeud>(){
 				@Override
-				public int compare(NoeudAStar i, NoeudAStar j){
+				public int compare(Noeud i, Noeud j){
 					if(i.getCout() > j.getCout()){
 						return 1;
 					}
@@ -213,140 +171,28 @@ public class Agent implements Runnable {
 				}
 			}
 		);
-
-		//initialisation du coût au départ
-		source.setCoutG(0);
-		queue.add(source);
-
-		boolean trouve = false;
-		NoeudAStar current = null;
-		while((!queue.isEmpty())&&(!trouve)){
-			// selection du noeud avec le score F le plus bas
-			current = queue.poll();
-
-			explored.add(current);
-			//on regarde si on est au noeud solution
-			if(current.estSolution(but)){
-
-				NoeudAStar n = null;
-				if(current.getPositionRobot().getBijou()) {
-					n = new NoeudAStar(current.getPositionRobot(),Action.ASPIRER,current,0,0,0);
-					n = new NoeudAStar(current.getPositionRobot(),Action.RAMASSER,n,0,0,0);
-				}
-				else if(current.getPositionRobot().getBijou())
-					n = new NoeudAStar(current.getPositionRobot(),Action.RAMASSER,current,0,0,0);
-				else if(current.getPositionRobot().getPoussiere())
-					n = new NoeudAStar(current.getPositionRobot(),Action.ASPIRER,current,0,0,0);
-				current = n;
-				trouve = true;
-			}
-			else {
-				//on visite tout les noeuds voisin
-				for (NoeudAStar voisin : getVoisins(current)) {
-					voisin.setCoutH(heuristique(voisin.getPositionRobot(), but.getPositionRobot()));
-					int cost = 1;
-					int temp_g_scores = current.getCoutG() + cost;
-					int temp_f_scores = temp_g_scores + voisin.getCoutH();
-
-					if ((explored.contains(voisin)) && (temp_f_scores >= voisin.getCout())) {
-						continue;
-					}
-					else if ((!queue.contains(voisin)) ||
-							(temp_f_scores < voisin.getCout())) {
-						voisin.setCoutG(temp_g_scores);
-						voisin.setCoutF(temp_f_scores);
-						if (queue.contains(voisin)) {
-							queue.remove(voisin);
-						}
-						queue.add(voisin);
-					}
-				}
-			}
-		}
-
-		List<NoeudAStar> chemin = new ArrayList<>();
-		while (current != null) {
-			chemin.add(current);
-			current = current.getNoeudParent();
-		}
-		// on veut la parocurir dans l'autre sens
-		Collections.reverse(chemin);
-		for (NoeudAStar n : chemin){
-			System.out.println(n.getPositionRobot() + " : " + n.getAction());
-		}
-		return chemin;
-	}
-
-	/**
-	 * Récupérer les noeuds voisins d'un noeud.
-	 * @param p : le noeud dont on veut les voisons
-	 * @return La liste des noeuds voisins du noeud en parametre.
-	 */
-	private ArrayList<NoeudAStar> getVoisins(NoeudAStar p){
-
-		ArrayList<NoeudAStar> voisins = new ArrayList<>();
-
-		Piece haut = p.getPositionRobot().voisin(Direction.haut);
-		Piece bas = p.getPositionRobot().voisin(Direction.bas);
-		Piece gauche = p.getPositionRobot().voisin(Direction.gauche);
-		Piece droite = p.getPositionRobot().voisin(Direction.droite);
-
-		// haut
-		if(haut != null) {
-			voisins.add(new NoeudAStar(haut,Action.MONTER,p,0,0,0));
-		}
-
-		// bas
-		if(bas != null) {
-			voisins.add(new NoeudAStar(bas,Action.DESCENDRE,p,0,0,0));
-		}
-
-		// gauche
-		if(gauche != null) {
-			voisins.add(new NoeudAStar(gauche,Action.GAUCHE,p,0,0,0));
-		}
-
-		// droite
-		if(droite != null) {
-			voisins.add(new NoeudAStar(droite,Action.DROITE,p,0,0,0));
-		}
-
-		return voisins;
-	}
-
-	private int heuristique(Piece depart, Piece arrivee) {
-		// distance de manhattan
-		return (Math.abs(depart.getAbscisse() - arrivee.getAbscisse()) + Math.abs(depart.getOrdonnee() - arrivee.getOrdonnee()));
-	}
+		frontiere.add(noeudDepart);
 
 
-	/**
-	 * Récupérer la liste des actions à faire par un algorithme d'exploration non informé.
-	 * @return La liste des actions.
-	 */
-	private ArrayList<Action> explorationNonInformee() {
-		ArrayList<NoeudUCF> frontiere = new ArrayList<>();
-
-		frontiere.add(new NoeudUCF(this.croyance, this.position, Action.ATTENDRE, null, 0));
 		while (true) {
 			if (frontiere.isEmpty())
 				return null;
 
-			// On récupère le noeud dans la frontière dont le cout est minimal
-			int min = frontiere.get(0).getCout();
-			int ind = 0;
-			for (int i = 0 ; i < frontiere.size() ; i++) {
-				if (frontiere.get(i).getCout() < min) {
-					min = frontiere.get(i).getCout();
-					ind = i;
-				}
+			boolean continuer = true;
+			Noeud n = null;
+			while (continuer) {
+				n = frontiere.poll();
+				continuer = explored.contains(n);
 			}
-			NoeudUCF n = frontiere.remove(ind);
-
+		
+			explored.add(n);
+			
 			// S'il est solution on récupère la liste des actions pour arriver à ce noeud
 			if (n.estSolution(this.desir)) {
+				System.out.println(n.getCout());
+				System.out.println(n.calculerGain());
 				ArrayList<Action> actions = new ArrayList<>();
-				NoeudUCF node = n;
+				Noeud node = n;
 				this.destination = node.getPositionRobot();
 				while (node != null) {
 					actions.add(node.getAction());
@@ -354,57 +200,120 @@ public class Agent implements Runnable {
 				}
 				return actions;
 			}
+			
 			// expansion
-			frontiere.addAll(this.expansionUniformCostSearch(n));
+			if (n.getProfondeur() < 7)
+				if (informe)
+					frontiere.addAll(this.AstarSearch(n));
+				else
+					frontiere.addAll(this.UCFSearch(n));
+			else 
+				return null;
 		}
 	}
+	
+	/**
+	 * Récupérer les noeuds voisins d'un noeud pour a*.
+	 * @param p : le noeud dont on veut les voisons
+	 * @return La liste des noeuds voisins du noeud en parametre.
+	 */
+	private ArrayList<NoeudAStar> AstarSearch(Noeud n){
+		NoeudAStar noeud = (NoeudAStar) n;
 
+		ArrayList<NoeudAStar> voisins = new ArrayList<>();
+
+		Piece haut = noeud.getCarte().voisin(noeud.getPositionRobot(), Direction.haut);
+		Piece bas = noeud.getCarte().voisin(noeud.getPositionRobot(), Direction.bas);
+		Piece gauche = noeud.getCarte().voisin(noeud.getPositionRobot(), Direction.gauche);
+		Piece droite = noeud.getCarte().voisin(noeud.getPositionRobot(), Direction.droite);
+
+		Piece position = noeud.getPositionRobot();
+		// haut
+		if(haut != null) {
+			int cout = noeud.getCout() + 1;
+			voisins.add(new NoeudAStar(noeud.getCarte(),haut,Action.MONTER,noeud,cout));
+		}
+
+		// bas
+		if(bas != null) {
+			int cout = noeud.getCout() + 1;
+			voisins.add(new NoeudAStar(noeud.getCarte(),bas,Action.DESCENDRE,noeud,cout));
+		}
+
+		// gauche
+		if(gauche != null) {
+			int cout = noeud.getCout() + 1;
+			voisins.add(new NoeudAStar(noeud.getCarte(),gauche,Action.GAUCHE,noeud,cout));
+		}
+
+		// droite
+		if(droite != null) {
+			int cout = noeud.getCout() + 1;
+			voisins.add(new NoeudAStar(noeud.getCarte(),droite,Action.DROITE,noeud,cout));
+		}
+
+		// aspirer
+		if (noeud.getCarte().piece(position).getBijou() || noeud.getCarte().piece(position).getPoussiere()) {
+			voisins.add(new NoeudAStar(this.getCarteApresAspiration(position), noeud.getPositionRobot(),
+					Action.ASPIRER, noeud, noeud.getCout() + 1));
+		}
+		
+		// ramasser
+		if (noeud.getCarte().piece(position).getBijou()) {
+			voisins.add(new NoeudAStar(this.getCarteApresRamassage(position), noeud.getPositionRobot(), 
+					Action.RAMASSER, noeud, noeud.getCout() + 1));
+		}
+		
+		return voisins;
+	}
+	
 	/**
 	 * Récupérer les noeuds voisins d'un noeud.
 	 * @param noeud Le noeud courant dont on cherche les voisins.
 	 * @return La liste des noeuds voisins du noeud courant.
 	 */
-	private ArrayList<NoeudUCF> expansionUniformCostSearch(NoeudUCF noeud) {
-		ArrayList<NoeudUCF> noeudsVoisins = new ArrayList<>();
+	private Collection<Noeud> UCFSearch(Noeud n) {
+		NoeudUCF noeud = (NoeudUCF) n;
+		ArrayList<Noeud> noeudsVoisins = new ArrayList<>();
 
 		Piece position = noeud.getPositionRobot();
 		// pour chaque action possible
 		// 		- monter
-		Piece p = position.voisin(Direction.haut);
+		Piece p = croyance.voisin(position, Direction.haut);
 		if (p != null) {
-			NoeudUCF s = new NoeudUCF(this.croyance, p, Action.MONTER, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.MONTER, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 
 		//		- descendre
-		p = position.voisin(Direction.bas);
+		p = croyance.voisin(position, Direction.bas);
 		if (p != null) {
-			NoeudUCF s = new NoeudUCF(this.croyance, p, Action.DESCENDRE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DESCENDRE, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 
 		//	- droite
-		p = position.voisin(Direction.droite);
+		p = croyance.voisin(position, Direction.droite);
 		if (p != null) {
-			NoeudUCF s = new NoeudUCF(this.croyance, p, Action.DROITE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.DROITE, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 		//		- gauche
-		p = position.voisin(Direction.gauche);
+		p = croyance.voisin(position, Direction.gauche);
 		if (p != null) {
-			NoeudUCF s = new NoeudUCF(this.croyance, p, Action.GAUCHE, noeud, noeud.getCout() + 1);
+			Noeud s = new NoeudUCF(noeud.getCarte(), p, Action.GAUCHE, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 
 		//		- aspirer
-		if (position.getBijou() || position.getPoussiere()) {
-			NoeudUCF s = new NoeudUCF(this.getCarteApresApiration(), position, Action.ASPIRER, noeud, noeud.getCout() + 1 - position.gainAspirer());
+		if (noeud.getCarte().piece(position).getBijou() || noeud.getCarte().piece(position).getPoussiere()) {
+			Noeud s = new NoeudUCF(this.getCarteApresAspiration(position), position, Action.ASPIRER, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 
 		//		- ramasser
-		if (position.getBijou()) {
-			NoeudUCF s = new NoeudUCF(this.getCarteApresRamassage(), position, Action.RAMASSER, noeud, noeud.getCout() + 1 - position.gainRamasser());
+		if (noeud.getCarte().piece(position).getBijou()) {
+			Noeud s = new NoeudUCF(this.getCarteApresRamassage(position), position, Action.RAMASSER, noeud, noeud.getCout() + 1);
 			noeudsVoisins.add(s);
 		}
 
@@ -415,38 +324,49 @@ public class Agent implements Runnable {
 	 * Récupérer l'état de l'environnement après aspiration.
 	 * @return  l'état de l'environnement après aspiration.
 	 */
-	private Piece[][] getCarteApresApiration() {
-		int largeur = croyance.length;
-		int longueur = croyance[0].length;
+	private Manoir getCarteApresAspiration(Piece positionRobot) {
+		int largeur = croyance.getLargeur();
+		int longueur = croyance.getLongueur();
 
 		Piece[][] carteApresAspiration = new Piece[largeur][longueur];
 		for (int i = 0 ; i < largeur ; i++) {
 			for (int j = 0 ; j < longueur ; j++) {
-				carteApresAspiration[i][j] = new Piece(i,j, this.croyance);
+				carteApresAspiration[i][j] = new Piece(i,j);
 			}
 		}
-		return carteApresAspiration;
+
+		Manoir manoir = new Manoir(carteApresAspiration);
+		manoir.piece(positionRobot).setBijou(false);
+		manoir.piece(positionRobot).setPoussiere(false);
+		
+		return manoir;
 	}
 
 	/**
 	 * Récupérer l'état de l'environnement après ramassage.
 	 * @return l'état de l'environnement après ramassage.
 	 */
-	private Piece[][] getCarteApresRamassage() {
-		int largeur = croyance.length;
-		int longueur = croyance[0].length;
+	private Manoir  getCarteApresRamassage(Piece positionRobot) {
+		int largeur = croyance.getLargeur();
+		int longueur = croyance.getLongueur();
 
-		Piece[][] carteApresAspiration = new Piece[largeur][longueur];
+		Piece[][] carteApresRamassage = new Piece[largeur][longueur];
 		for (int i = 0 ; i < largeur ; i++) {
 			for (int j = 0 ; j < longueur ; j++) {
-				carteApresAspiration[i][j] = new Piece(i,j, this.croyance);
-				if (croyance[i][j].getPoussiere())
-					carteApresAspiration[i][j].setPoussiere(true);
+				carteApresRamassage[i][j] = new Piece(i,j);
+				if (croyance.piece(i,j).getPoussiere()) {
+					carteApresRamassage[i][j].setPoussiere(true);
+					carteApresRamassage[i][j].setBijou(true);
+				}
 			}
 		}
-		return carteApresAspiration;
-	}
 
+		Manoir manoir = new Manoir(carteApresRamassage);
+		manoir.piece(positionRobot).setBijou(false);
+		
+		return manoir;
+		
+	}
 	/**
 	 * Cycle de vie de l'agent
 	 */

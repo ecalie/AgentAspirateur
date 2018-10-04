@@ -2,28 +2,21 @@ package modele;
 
 
 public class NoeudUCF extends Noeud{
-    private Piece[][] carte;
     private NoeudUCF noeudParent;
 
-    public NoeudUCF(Piece[][] carte, Piece position, Action action, NoeudUCF noeudParent, int cout) {
-        super(position, action, cout);
+    public NoeudUCF(Manoir carte, Piece position, Action action, NoeudUCF noeudParent, int cout) {
+        super(carte, position, action, cout);
         this.noeudParent = noeudParent;
-        this.carte = carte;
+        
+        if (this.noeudParent == null) 
+        	this.profondeur = 0;
+        else
+        	this.profondeur = this.noeudParent.profondeur + 1;
     }
 
     @Override
     public NoeudUCF getNoeudParent() {
         return noeudParent;
     }
-
-    /**
-     * Comparer le noeud avec un noeud solution
-     * @param solution Le noeud solution
-     * @return Vrai si les deux ont la même carte.
-     */
-    public boolean estSolution(int desir) {
-        return (this.calculerGain() - this.cout > desir);
-    }
-
 
 }

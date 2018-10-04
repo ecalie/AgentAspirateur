@@ -5,7 +5,7 @@ public class Environnement implements Runnable {
 	private int longueur;
 	private int largeur;
 
-	private Piece[][] pieces;
+	private Manoir pieces;
 	
 	/**
 	 * Créer l'environnement.
@@ -16,12 +16,15 @@ public class Environnement implements Runnable {
 		this.longueur = longueur;
 		this.largeur = largeur;
 		
-		this.pieces = new Piece[largeur][longueur];
+		Piece[][] pieces = new Piece[longueur][largeur];
 		for (int i = 0 ; i < this.largeur ; i++) {
 			for (int j = 0 ; j < this.longueur ; j++) {
-				pieces[i][j] = new Piece(i,j, this.pieces);
+				pieces[i][j] = new Piece(i,j);
 			}
 		}
+		pieces[5][4].setPoussiere(true);
+		
+		this.pieces = new Manoir(pieces);
 	}
 	
 	public int getLongueur() {
@@ -32,7 +35,7 @@ public class Environnement implements Runnable {
 		return largeur;
 	}
 
-	public Piece[][] getPieces() {
+	public Manoir getPieces() {
 		return pieces;
 	}
 
@@ -43,7 +46,7 @@ public class Environnement implements Runnable {
 		int abscisse = (int) (Math.random() * this.largeur);
 		int ordonnee = (int) (Math.random() * this.longueur);
 		
-		this.pieces[abscisse][ordonnee].setPoussiere(true);
+		this.pieces.piece(abscisse,ordonnee).setPoussiere(true);
 	}
 	
 	/**
@@ -53,17 +56,17 @@ public class Environnement implements Runnable {
 		int abscisse = (int) (Math.random() * this.largeur);
 		int ordonnee = (int) (Math.random() * this.longueur);
 		
-		this.pieces[abscisse][ordonnee].setBijou(true);		
+		this.pieces.piece(abscisse,ordonnee).setBijou(true);		
 	}
 	
 	public Environnement ramasser(int abscisse, int ordonnee) {
-		this.pieces[abscisse][ordonnee].setBijou(false);
+		this.pieces.piece(abscisse,ordonnee).setBijou(false);
 		return this;
 	}
 	
 	public Environnement aspirer(int abscisse, int ordonnee) {
-		this.pieces[abscisse][ordonnee].setBijou(false);
-		this.pieces[abscisse][ordonnee].setPoussiere(false);
+		this.pieces.piece(abscisse,ordonnee).setBijou(false);
+		this.pieces.piece(abscisse,ordonnee).setPoussiere(false);
 		return this;
 	}
 
