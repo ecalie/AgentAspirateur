@@ -22,8 +22,6 @@ public class Environnement implements Runnable {
 				pieces[i][j] = new Piece(i,j);
 			}
 		}
-		
-		pieces[5][4].setPoussiere(true);
 		this.pieces = new Manoir(pieces);
 	}
 	
@@ -77,12 +75,12 @@ public class Environnement implements Runnable {
 	public void run() {
 		while (true) {
 			double probabilité = Math.random();
-			if (probabilité > 0.66)
+			if (probabilité < Constante.probabiliteBijou)
 				this.genererBijou();
 			else 
 				this.genererPoussiere();
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(Constante.attenteEnvironnement);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

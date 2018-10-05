@@ -189,7 +189,6 @@ public class Agent implements Runnable {
 			
 			// S'il est solution on récupère la liste des actions pour arriver à ce noeud
 			if (n.estSolution(this.desir)) {
-				System.out.println(n.getCout());
 				ArrayList<Action> actions = new ArrayList<>();
 				Noeud node = n;
 				this.destination = node.getPositionRobot();

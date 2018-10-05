@@ -42,7 +42,7 @@ public class Effecteur {
     		}
     		
     		try {
-    			Thread.sleep(500);
+    			Thread.sleep(Constante.attenteAction);
     		} catch (InterruptedException e) {
     			// TODO Auto-generated catch block
     			e.printStackTrace();
